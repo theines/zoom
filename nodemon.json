@@ -1,3 +1,4 @@
 {
+    "ignore": ["src/pulic/*"],
     "exec": "babel-node src/server.js"
 }
