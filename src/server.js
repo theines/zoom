@@ -13,21 +13,19 @@ app.get("/*", (req, res) => res.redirect("/"));
  
 const handleListen = () => console.log(`Listening on http://localhost:3000`);
 
-
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
-// 위에처럼 하면 http server 뿐만아니라 ws server도 올린다는 뜻이고
-// 매번 이렇게 안해도 되고 웹소켓이랑 http랑 같이 올리고 싶은 경우에만
-// 이렇게 해서 2개의 proptocal이 같은 port를 공유하게 되었다
 
+const sockets = [];
 
 wss.on("connection", (socket) => {//여기서의 socket은 연결된 브라우저를 뜻한다
+    sockets.push(socket); // 연결된 브라우저(socket)을 위에 정의한 배열에 넣는다.
     console.log("Connected to Browser");
     socket.on("close", () => console.log("disconnected from browser"))
-    socket.on("message", message => {
-        console.log(message.toString('utf-8'));
-    })
-    socket.send("hello");
+    socket.on("message", (message) => {
+        sockets.forEach((aSocket) => aSocket.send(message.toString('utf-8')));
+        //socket.send(message.toString('utf-8'));
+    });
 });
 
 server.listen(3000, handleListen);
