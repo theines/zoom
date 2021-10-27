@@ -23,8 +23,10 @@ wss.on("connection", (socket) => {//여기서의 socket은 연결된 브라우�
     console.log("Connected to Browser");
     socket.on("close", () => console.log("disconnected from browser"))
     socket.on("message", (message) => {
-        sockets.forEach((aSocket) => aSocket.send(message.toString('utf-8')));
-        //socket.send(message.toString('utf-8'));
+        sockets.forEach((aSocket) => {
+            message = message.toString('utf-8');
+            aSocket.send(message);
+        });
     });
 });
 
