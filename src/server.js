@@ -16,16 +16,10 @@ const handleListen = () => console.log(`Listening on http://localhost:3000`);
 const httpServer = http.createServer(app);
 const wsServer = SocketIO(httpServer);
 
-// 여기서 중요한 점
-// done함수 코드는 여기 백엔드에서 돌리는게 아니다(보안에 큰 문제라)
-// done함수가 실행 되면 프론트의 backendDone함수가 돌아갈 것이다.
-// 그러니까 프론트의 코드를 백엔드에서 돌리고 있는 모습이다.
 wsServer.on("connection", (socket) => {
     socket.on("enter_room", (roomName, done) => {
-        console.log(roomName);
-        setTimeout(()=>{
-            done("hello from the backend");
-        }, 10000);
+        socket.join(roomName);
+        done(); // app.js의 showRoom()이 execute 됨
     });
 });
 
