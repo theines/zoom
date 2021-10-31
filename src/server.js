@@ -20,6 +20,7 @@ wsServer.on("connection", (socket) => {
     socket.on("enter_room", (roomName, done) => {
         socket.join(roomName);
         done(); // app.js의 showRoom()이 execute 됨
+        socket.to(roomName).emit("welcome"); // socketIO는 나를 제외하고 메세지를 보낸다는걸 잊지말자
     });
 });
 
