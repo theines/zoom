@@ -17,18 +17,20 @@ const httpServer = http.createServer(app);
 const wsServer = SocketIO(httpServer);
 
 wsServer.on("connection", (socket) => {
+    socket["nickname"] = "Anonnymous";
     socket.on("enter_room", (roomName, done) => {
         socket.join(roomName); 
         done(); // app.js의 showRoom()이 execute 됨
-        socket.to(roomName).emit("welcome"); // socketIO는 나를 제외하고 메세지를 보낸다는걸 잊지말자
+        socket.to(roomName).emit("welcome", socket.nickname); // socketIO는 나를 제외하고 메세지를 보낸다는걸 잊지말자
     });
     socket.on("disconnecting", () => {
-        socket.rooms.forEach((room) => socket.to(room).emit("bye"));
+        socket.rooms.forEach((room) => socket.to(room).emit("bye", socket.nickname));
     }); 
     socket.on("new_message", (msg, room, done) => {
-        socket.to(room).emit("new_message", msg);
+        socket.to(room).emit("new_message", `${socket.nickname}: ${msg}`);
         done();
-    })
+    });
+    socket.on("nickname", nickname => socket["nickname"] = nickname);
 });
 
 /*
