@@ -18,10 +18,17 @@ const wsServer = SocketIO(httpServer);
 
 wsServer.on("connection", (socket) => {
     socket.on("enter_room", (roomName, done) => {
-        socket.join(roomName);
+        socket.join(roomName); 
         done(); // app.js의 showRoom()이 execute 됨
         socket.to(roomName).emit("welcome"); // socketIO는 나를 제외하고 메세지를 보낸다는걸 잊지말자
     });
+    socket.on("disconnecting", () => {
+        socket.rooms.forEach((room) => socket.to(room).emit("bye"));
+    }); 
+    socket.on("new_message", (msg, room, done) => {
+        socket.to(room).emit("new_message", msg);
+        done();
+    })
 });
 
 /*
