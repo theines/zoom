@@ -1,5 +1,4 @@
-// io function이 알아서 socket.io를 실행하고 있는 서버를 찾을 거다
-const socket = io();
+const socket = io();// io function이 알아서 socket.io를 실행하고 있는 서버를 찾을 거다
 const welcome = document.getElementById("welcome");
 const roomform = welcome.querySelector("#roomname");
 const nickform = welcome.querySelector("#nickname");

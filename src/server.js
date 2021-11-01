@@ -16,6 +16,29 @@ const handleListen = () => console.log(`Listening on http://localhost:3000`);
 const httpServer = http.createServer(app);
 const wsServer = SocketIO(httpServer);
 
+/* #2-8 Room Count part1
+Adaptor will synchronize my realtime application
+among diffenet servers
+*/
+
+function publicRooms(){
+    //const sids = wsServer.sockets.adapter.sids;
+    //const rooms = wsServer.sockets.adapter.rooms;
+    // 아래코드는 위 코드의 섹시버전
+    const {
+        sockets: {
+            adapter: { sids, rooms },
+        },
+    } = wsServer;
+    const publicRooms = [];
+    rooms.forEach((_, key) => {
+        if(sids.get(key) === undefined){
+            publicRooms.push(key);
+        }
+    });
+    return publicRooms;
+}
+
 wsServer.on("connection", (socket) => {
     socket["nickname"] = "Anonnymous";
     socket.on("nickname", nickname => socket["nickname"] = nickname);
