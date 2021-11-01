@@ -18,6 +18,7 @@ const wsServer = SocketIO(httpServer);
 
 wsServer.on("connection", (socket) => {
     socket["nickname"] = "Anonnymous";
+    socket.on("nickname", nickname => socket["nickname"] = nickname);
     socket.on("enter_room", (roomName, done) => {
         socket.join(roomName); 
         done(); // app.js의 showRoom()이 execute 됨
@@ -30,7 +31,6 @@ wsServer.on("connection", (socket) => {
         socket.to(room).emit("new_message", `${socket.nickname}: ${msg}`);
         done();
     });
-    socket.on("nickname", nickname => socket["nickname"] = nickname);
 });
 
 /*
