@@ -1,5 +1,6 @@
 import http from "http";
-import SocketIO from "socket.io";
+import { Server } from "socket.io";
+import { instrument } from "@socket.io/admin-ui";
 import express from "express";
 
 const app = express();
@@ -10,11 +11,20 @@ app.use("/public", express.static(__dirname + "/public"))
 
 app.get("/", (req, res) => res.render("home"));
 app.get("/*", (req, res) => res.redirect("/"));
- 
+
 const handleListen = () => console.log(`Listening on http://localhost:3000`);
 
 const httpServer = http.createServer(app);
-const wsServer = SocketIO(httpServer);
+// https://admin.socket.io
+const wsServer = new Server(httpServer, {
+    cors: {
+        origin: ["https://admin.socket.io"],
+        credentials: true,
+    },
+});
+instrument(wsServer, {
+    auth: false
+});
 
 /* #2-8 Room Count part1
 Adaptor will synchronize my realtime application
