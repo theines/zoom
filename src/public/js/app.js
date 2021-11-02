@@ -36,7 +36,6 @@ function handleNicknameSubmit(event){
     event.preventDefault();
     const input = welcome.querySelector("#nickname input");
     const value = input.value; //why do i have to do it like this?
-    console.log(value);
     socket.emit("nickname", value);
 }
 
@@ -61,3 +60,17 @@ socket.on("bye", (left) => {
 });
 
 socket.on("new_message", addMessage);
+
+// socket.on("room_change", console.log);
+// above line is SAME as below line
+// socket.on("room_change", (msg) => console.log(msg));
+
+socket.on("room_change", (rooms) => {
+    const roomList = welcome.querySelector("ul");
+    roomList.innerHTML = "";
+    rooms.forEach(room => {
+        const li = document.createElement("li");
+        li.innerText = room;
+        roomList.append(li);
+    });
+})
