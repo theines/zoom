@@ -39,17 +39,23 @@ function publicRooms(){
     return publicRooms;
 }
 
+function countRoom(roomName){
+    return wsServer.socket.adapter.rooms.get(roomName)?.size;
+}
+
 wsServer.on("connection", (socket) => {
     socket["nickname"] = "Anonnymous";
     socket.on("nickname", nickname => socket["nickname"] = nickname);
     socket.on("enter_room", (roomName, done) => {
         socket.join(roomName); 
         done(); // app.js의 showRoom()이 execute 됨
-        socket.to(roomName).emit("welcome", socket.nickname); // socketIO는 나를 제외하고 메세지를 보낸다는걸 잊지말자
+        socket.to(roomName).emit("welcome", socket.nickname, countRoom(roomName)); // socketIO는 나를 제외하고 메세지를 보낸다는걸 잊지말자
         wsServer.sockets.emit("room_change", publicRooms());
     });
     socket.on("disconnecting", () => {
-        socket.rooms.forEach((room) => socket.to(room).emit("bye", socket.nickname));
+        socket.rooms.forEach((room) => 
+            socket.to(room).emit("bye", socket.nickname, countRoom(room) - 1)// -1 안하면 나 자신도 포함일테니까
+        );
     }); 
     socket.on("disconnect", () => {
         wsServer.sockets.emit("room_change", publicRooms());
