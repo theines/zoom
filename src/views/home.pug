@@ -11,8 +11,9 @@ html(lang="en")
             h1 Noom
         main
             div#welcome
-                input(placeholder="room name", required, type="text")
-                button Enter room
+                form
+                    input(placeholder="room name", required, type="text")
+                    button Enter room
             div#call
                 div#myStream
                     video#myFace(autoplay,playsinline, width="400", height="400")
