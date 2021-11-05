@@ -12,9 +12,10 @@ let myStream;
 let muted = false;
 let cameraOff = false;
 let roomName;
+let myPeerConnection;
 
-async function getCameras(){
-    try{
+async function getCameras() {
+    try {
         const devices = await navigator.mediaDevices.enumerateDevices();
         const cameras = devices.filter(device => device.kind == "videoinput");
         const currentCamera = myStream.getVideoTracks()[0];
@@ -22,17 +23,17 @@ async function getCameras(){
             const option = document.createElement("option");
             option.value = camera.deviceId;
             option.innerText = camera.label;
-            if(currentCamera.label == camera.label){
+            if (currentCamera.label == camera.label) {
                 option.selected = true;
             }
             camerasSelect.appendChild(option);
         });
-    } catch(e){
+    } catch (e) {
         console.log(e);
     }
 }
 
-async function getMedia(deviceId){
+async function getMedia(deviceId) {
     const initialConstraints = {
         audio: true,
         video: { facingMode: "user" },
@@ -41,15 +42,15 @@ async function getMedia(deviceId){
         audio: true,
         video: { deviceId: { exact: deviceId } },
     };
-    try{
+    try {
         myStream = await navigator.mediaDevices.getUserMedia(
-            deviceId? cameraConstraints : initialConstraints
+            deviceId ? cameraConstraints : initialConstraints
         );
         myFace.srcObject = myStream;
-        if(!deviceId){
+        if (!deviceId) {
             await getCameras();
         }
-    } catch (e){
+    } catch (e) {
         console.log(e);
     }
 }
@@ -58,7 +59,7 @@ function handleMuteClick() {
     myStream
         .getAudioTracks()
         .forEach((track) => (track.enabled = !track.enabled));
-    if(!muted){
+    if (!muted) {
         muteBtn.innerText = "Unmute";
         muted = true;
     } else {
@@ -79,7 +80,7 @@ function handleCameraClick() {
     }
 }
 
-async function handleCameraChange(){
+async function handleCameraChange() {
     //console.log(camerasSelect.value); I can get a ID of the device
     await getMedia(camerasSelect.value);
 }
@@ -93,13 +94,14 @@ camerasSelect.addEventListener("input", handleCameraChange);
 const welcome = document.getElementById("welcome");
 const welcomeForm = welcome.querySelector("form");
 
-function startMedia(){
+async function startMedia() {
     welcome.hidden = true;
     call.hidden = false;
-    getMedia();
+    await getMedia();
+    makeConnection();
 }
 
-function handleWelcomeSubmit(event){
+function handleWelcomeSubmit(event) {
     event.preventDefault();
     const input = welcomeForm.querySelector("input");
     socket.emit("join_room", input.value, startMedia);
@@ -112,6 +114,24 @@ welcomeForm.addEventListener("submit", handleWelcomeSubmit);
 
 // Socket code
 
-socket.on("welcome", () => {
-    console.log("sbd joined");
-})
+socket.on("welcome", async() => {
+    const offer = await myPeerConnection.createOffer();
+    myPeerConnection.setLocalDescription(offer);
+    console.log("sent the offer");
+    socket.emit("offer", offer, roomName);
+}); // will run on Firefox browser(one that receives join alarm)
+
+socket.on("offer", (offer) => {
+    console.log(offer);
+}); // will run on Chrome broswer(one that joins)
+
+// RTC code
+
+function makeConnection() {
+    // 전역에서 사용할 수 있도록 전역변수로 위쪽에 선언 해둠
+    myPeerConnection = new RTCPeerConnection();
+    // 
+    myStream
+        .getTracks()
+        .forEach(track => myPeerConnection.addTrack(track, myStream));
+}
