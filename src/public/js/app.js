@@ -108,3 +108,10 @@ function handleWelcomeSubmit(event){
 }
 
 welcomeForm.addEventListener("submit", handleWelcomeSubmit);
+
+
+// Socket code
+
+socket.on("welcome", () => {
+    console.log("sbd joined");
+})
