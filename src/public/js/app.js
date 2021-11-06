@@ -123,6 +123,7 @@ socket.on("welcome", async() => {
 }); // will run on PeerA browser(one that send the offer)
 
 socket.on("offer", async(offer) => {
+    console.log("received the offer");
     // offer를 받으려고 myPeerConnection.setRemoteDescription(offer);
     // 이렇게 하니까 오퍼가 오기도 전에 실행이 되서 에러가 났다.
     // 해결은 원래 join_room 할 때 initCall함수를 같이 emit했었는데 그 전에 실행시켰다. (서버에서도 done()빼고)
@@ -130,9 +131,11 @@ socket.on("offer", async(offer) => {
     const answer = await myPeerConnection.createAnswer();
     myPeerConnection.setLocalDescription(answer);
     socket.emit("answer", answer, roomName);
+    console.log("sent the answer");
 }); // will run on PeerB broswer(one that joins)
 
 socket.on("answer", answer => {
+    console.log("received the answer");
     myPeerConnection.setRemoteDescription(answer);
 }); //this will run on PeerA browser
 /* 
@@ -150,15 +153,31 @@ setRemoteDescripton(answer)
 
 */
 
-
+socket.on("ice", ice => {
+    console.log("received the candidate");
+    myPeerConnection.addIceCandidate(ice);
+});
 
 // RTC code
 
 function makeConnection() {
     // 전역에서 사용할 수 있도록 전역변수로 위쪽에 선언 해둠
-    myPeerConnection = new RTCPeerConnection();
-    // 
+    myPeerConnection = new RTCPeerConnection(); 
+    myPeerConnection.addEventListener("icecandidate", handleIce);
+    myPeerConnection.addEventListener("addstream", handleAddStream);
     myStream
         .getTracks()
         .forEach(track => myPeerConnection.addTrack(track, myStream));
+}
+
+function handleIce(data){
+    console.log("sent the candidate");
+    // data에 candidate이 있는걸 확인했다. 이제 peerA와 peerB는 서로의 모든 candidate들을 가지고 있어야 해서
+    // 보내주어야 한다. (emit -> 서버 -> on도 해야한다는 뜻)
+    socket.emit("ice", data.candidate, roomName);
+}
+
+function handleAddStream(data){
+    const peerFace = document.getElementById("peerFace");
+    peerFace.srcObject = data.stream;
 }
