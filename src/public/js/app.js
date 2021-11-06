@@ -94,17 +94,18 @@ camerasSelect.addEventListener("input", handleCameraChange);
 const welcome = document.getElementById("welcome");
 const welcomeForm = welcome.querySelector("form");
 
-async function startMedia() {
+async function initCall() {
     welcome.hidden = true;
     call.hidden = false;
     await getMedia();
     makeConnection();
 }
 
-function handleWelcomeSubmit(event) {
+async function handleWelcomeSubmit(event) {
     event.preventDefault();
     const input = welcomeForm.querySelector("input");
-    socket.emit("join_room", input.value, startMedia);
+    await initCall();
+    socket.emit("join_room", input.value);
     roomName = input.value;
     input.value = "";
 }
@@ -119,11 +120,37 @@ socket.on("welcome", async() => {
     myPeerConnection.setLocalDescription(offer);
     console.log("sent the offer");
     socket.emit("offer", offer, roomName);
-}); // will run on Firefox browser(one that receives join alarm)
+}); // will run on PeerA browser(one that send the offer)
 
-socket.on("offer", (offer) => {
-    console.log(offer);
-}); // will run on Chrome broswer(one that joins)
+socket.on("offer", async(offer) => {
+    // offer를 받으려고 myPeerConnection.setRemoteDescription(offer);
+    // 이렇게 하니까 오퍼가 오기도 전에 실행이 되서 에러가 났다.
+    // 해결은 원래 join_room 할 때 initCall함수를 같이 emit했었는데 그 전에 실행시켰다. (서버에서도 done()빼고)
+    myPeerConnection.setRemoteDescription(offer);
+    const answer = await myPeerConnection.createAnswer();
+    myPeerConnection.setLocalDescription(answer);
+    socket.emit("answer", answer, roomName);
+}); // will run on PeerB broswer(one that joins)
+
+socket.on("answer", answer => {
+    myPeerConnection.setRemoteDescription(answer);
+}); //this will run on PeerA browser
+/* 
+  peerA                           server                                 peerB
+===================================================================================================
+createOffer         
+setLocalDescription(offer)
+socket.emit("offer")--------->socket.on("offer",()=>               socket.on("offer")
+                        socket.to(roomName).emit("offer"))-------->setRemoteDescription(offer)
+                                                                    createAnswer()
+                                                                    setLocalDescription(answer)
+                                 socket.on("answer",() =>    <------socket.emit("answer")
+socket.on("answer")      <-------socket.to(roomName).emit("answer")
+setRemoteDescripton(answer)
+
+*/
+
+
 
 // RTC code
 
