@@ -28,6 +28,9 @@ wsServer.on("connection", (socket) => {
     socket.on("ice", (ice, roomName) => {
         socket.to(roomName).emit("ice", ice);
     })
+    socket.on("tangerine", (tangerine, roomName){
+        socket.to(roomName).emit("tangerine", tangerine);
+    })
 });
 
 const handleListen = () => console.log(`Listening on http://localhost:3000`);
@@ -36,4 +39,3 @@ httpServer.listen(3000, handleListen);
 ///////
 //project ideas
 // 1. r = vd (?) 도와주는 공간 (just for oneself)
-// 2. 모르겠다

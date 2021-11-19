@@ -188,3 +188,5 @@ function handleAddStream(data){
     const peerFace = document.getElementById("peerFace");
     peerFace.srcObject = data.stream;
 }
+
+//before stun
